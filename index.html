@@ -1,23 +1,1013 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Ravir Scott | 3D Portfolio</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ravir Scott | Artist & Developer</title>
+<meta name="description" content="Ravir Scott – Independent Artist, Developer & Author from Sonma, Begusarai.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+<!-- THREE.JS + GSAP from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<style>
+/* ─── RESET & ROOT ─── */
+:root {
+  --black: #03030a;
+  --card: #0b0b16;
+  --red: #c0392b;
+  --red2: #e74c3c;
+  --gold: #d4a017;
+  --text: #c8c8d8;
+  --muted: #55556a;
+  --white: #f0f0f0;
+  --border: rgba(255,255,255,0.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--text);font-family:'Rajdhani',sans-serif;overflow-x:hidden;cursor:none;}
+
+/* ─── CURSOR ─── */
+#cur{position:fixed;width:10px;height:10px;background:var(--red2);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s;}
+#cur2{position:fixed;width:32px;height:32px;border:1px solid rgba(231,76,60,.45);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .22s ease;}
+body:hover #cur2{opacity:1;}
+
+/* ─── CANVAS ─── */
+#canvas3d{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;}
+
+/* ─── OVERLAY ─── */
+#overlay{
+  position:fixed;inset:0;background:var(--black);z-index:100;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;
+  transition:opacity 1.4s ease, visibility 1.4s;
+}
+#overlay.hide{opacity:0;visibility:hidden;pointer-events:none;}
+.ov-name{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,10vw,8rem);
+  letter-spacing:.3em;color:var(--white);
+  text-shadow:0 0 80px rgba(231,76,60,.35),0 0 200px rgba(231,76,60,.1);
+  animation:flicker 5s infinite;
+}
+.ov-role{
+  font-family:'Share Tech Mono',monospace;font-size:.8rem;letter-spacing:.35em;
+  color:var(--muted);text-transform:uppercase;
+}
+.ov-line{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--red2),transparent);}
+#enterBtn{
+  margin-top:.5rem;background:transparent;border:1px solid var(--red);
+  color:var(--red2);font-family:'Share Tech Mono',monospace;font-size:.85rem;
+  letter-spacing:.4em;padding:1rem 3.5rem;cursor:none;position:relative;overflow:hidden;
+  transition:color .3s,box-shadow .3s;text-transform:uppercase;
+}
+#enterBtn::before{
+  content:'';position:absolute;inset:0;background:var(--red);
+  transform:scaleX(0);transform-origin:left;transition:transform .4s ease;z-index:-1;
+}
+#enterBtn:hover::before{transform:scaleX(1);}
+#enterBtn:hover{color:#fff;box-shadow:0 0 40px rgba(231,76,60,.4);}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.65}94%{opacity:1}96%{opacity:.8}97%{opacity:1}}
+
+/* ─── MAIN CONTENT ─── */
+#content{position:relative;z-index:10;opacity:0;transition:opacity 1.5s;}
+#content.show{opacity:1;}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1.4rem 5vw;
+  background:linear-gradient(180deg,rgba(3,3,10,.95) 0%,transparent 100%);
+  backdrop-filter:blur(6px);
+}
+.nav-brand{
+  font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.25em;
+  color:var(--white);text-decoration:none;
+}
+.nav-brand span{color:var(--red2);}
+.nav-links{display:flex;gap:2.5rem;list-style:none;}
+.nav-links a{
+  font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.2em;
+  color:var(--muted);text-decoration:none;text-transform:uppercase;
+  transition:color .25s;position:relative;
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;
+  background:var(--red2);transition:width .3s;
+}
+.nav-links a:hover{color:var(--white);}
+.nav-links a:hover::after{width:100%;}
+.nav-menu-btn{display:none;flex-direction:column;gap:5px;cursor:none;border:none;background:none;padding:4px;}
+.nav-menu-btn span{display:block;width:24px;height:1px;background:var(--text);}
+
+/* ─── SECTIONS BASE ─── */
+section{min-height:100vh;position:relative;padding:0 5vw;}
+
+/* ─── HERO ─── */
+#hero{
+  display:flex;flex-direction:column;justify-content:center;
+  padding-top:10vh;min-height:100vh;
+}
+.hero-tag{
+  font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.4em;
+  color:var(--red2);text-transform:uppercase;margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:.8rem;
+}
+.hero-tag::before{content:'';display:block;width:30px;height:1px;background:var(--red2);}
+.hero-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(4rem,12vw,10rem);
+  line-height:.9;letter-spacing:.05em;
+  color:var(--white);
+}
+.hero-name .accent{
+  -webkit-text-stroke:1px var(--red2);color:transparent;
+  display:block;
+}
+.hero-desc{
+  max-width:480px;margin-top:2rem;font-size:1.1rem;font-weight:300;
+  line-height:1.7;color:var(--muted);letter-spacing:.03em;
+}
+.hero-loc{
+  margin-top:1rem;font-family:'Share Tech Mono',monospace;font-size:.72rem;
+  letter-spacing:.3em;color:var(--muted);
+}
+.hero-loc span{color:var(--gold);}
+.hero-cta{
+  display:flex;gap:1.2rem;margin-top:3rem;flex-wrap:wrap;
+}
+.btn-primary{
+  background:var(--red);color:#fff;border:none;
+  font-family:'Share Tech Mono',monospace;font-size:.78rem;
+  letter-spacing:.3em;padding:.9rem 2.5rem;cursor:none;
+  transition:background .3s,box-shadow .3s;text-transform:uppercase;text-decoration:none;
+  display:inline-block;
+}
+.btn-primary:hover{background:var(--red2);box-shadow:0 0 30px rgba(231,76,60,.4);}
+.btn-outline{
+  background:transparent;color:var(--text);border:1px solid var(--border);
+  font-family:'Share Tech Mono',monospace;font-size:.78rem;
+  letter-spacing:.3em;padding:.9rem 2.5rem;cursor:none;
+  transition:border-color .3s,color .3s;text-transform:uppercase;text-decoration:none;
+  display:inline-block;
+}
+.btn-outline:hover{border-color:var(--red2);color:var(--white);}
+.hero-scroll{
+  position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:.5rem;
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.3em;
+  color:var(--muted);
+}
+.scroll-line{width:1px;height:60px;background:linear-gradient(to bottom,var(--red2),transparent);animation:scrollpulse 2s ease infinite;}
+@keyframes scrollpulse{0%,100%{opacity:.3;transform:scaleY(.5) translateY(-10px)}50%{opacity:1;transform:scaleY(1) translateY(0)}}
+
+/* ─── SECTION HEADERS ─── */
+.sec-header{display:flex;align-items:center;gap:1.5rem;margin-bottom:4rem;}
+.sec-num{
+  font-family:'Share Tech Mono',monospace;font-size:.75rem;
+  letter-spacing:.2em;color:var(--red2);
+}
+.sec-title{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3.5rem);
+  letter-spacing:.1em;color:var(--white);
+}
+.sec-line{flex:1;height:1px;background:var(--border);max-width:200px;}
+
+/* ─── ABOUT ─── */
+#about{padding-top:12vh;padding-bottom:10vh;}
+.about-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:5vw;align-items:center;}
+.about-visual{
+  position:relative;aspect-ratio:3/4;max-height:520px;
+  border:1px solid var(--border);overflow:hidden;
+}
+.about-img-placeholder{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#0d0d18 0%,#15152a 50%,#0d0d18 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1rem;
+}
+.about-img-placeholder .pi-icon{
+  width:80px;height:80px;border-radius:50%;
+  border:2px solid var(--red2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;color:var(--red2);
+  box-shadow:0 0 30px rgba(231,76,60,.2);
+}
+.about-img-placeholder p{
+  font-family:'Share Tech Mono',monospace;font-size:.7rem;
+  letter-spacing:.2em;color:var(--muted);text-transform:uppercase;text-align:center;padding:0 2rem;
+}
+.about-corner{
+  position:absolute;width:30px;height:30px;border-color:var(--red2);border-style:solid;
+}
+.about-corner.tl{top:-1px;left:-1px;border-width:2px 0 0 2px;}
+.about-corner.tr{top:-1px;right:-1px;border-width:2px 2px 0 0;}
+.about-corner.bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px;}
+.about-corner.br{bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
+.about-text h3{
+  font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.1em;
+  color:var(--white);margin-bottom:1.5rem;
+}
+.about-text p{font-size:1.05rem;line-height:1.8;color:var(--muted);margin-bottom:1.2rem;}
+.about-tags{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:2rem;}
+.tag{
+  font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.15em;
+  padding:.4rem 1rem;border:1px solid var(--border);color:var(--muted);
+  text-transform:uppercase;transition:border-color .25s,color .25s;
+}
+.tag:hover{border-color:var(--red2);color:var(--red2);}
+
+/* ─── TIMELINE ─── */
+#journey{padding-top:10vh;padding-bottom:10vh;}
+.timeline{position:relative;padding-left:2rem;}
+.timeline::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:1px;
+  background:linear-gradient(to bottom,transparent,var(--red2),var(--red2),transparent);
+}
+.tl-item{
+  position:relative;padding:0 0 3.5rem 3rem;
+  opacity:0;transform:translateX(-30px);transition:opacity .6s,transform .6s;
+}
+.tl-item.visible{opacity:1;transform:translateX(0);}
+.tl-dot{
+  position:absolute;left:-6px;top:4px;width:13px;height:13px;
+  border-radius:50%;background:var(--black);border:2px solid var(--red2);
+  box-shadow:0 0 12px rgba(231,76,60,.5);
+}
+.tl-year{
+  font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.2em;
+  color:var(--red2);margin-bottom:.4rem;
+}
+.tl-title{
+  font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.08em;
+  color:var(--white);margin-bottom:.5rem;
+}
+.tl-desc{font-size:1rem;color:var(--muted);line-height:1.7;max-width:600px;}
+
+/* ─── WORKS / MUSIC ─── */
+#works{padding-top:10vh;padding-bottom:10vh;}
+.works-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;}
+.work-card{
+  background:var(--card);border:1px solid var(--border);
+  padding:2rem;position:relative;overflow:hidden;
+  transition:border-color .3s,transform .3s;cursor:none;
+}
+.work-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--red2),transparent);
+  transform:scaleX(0);transition:transform .4s;
+}
+.work-card:hover{border-color:rgba(231,76,60,.3);transform:translateY(-4px);}
+.work-card:hover::before{transform:scaleX(1);}
+.work-type{
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.25em;
+  color:var(--red2);text-transform:uppercase;margin-bottom:1rem;
+}
+.work-title{
+  font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.08em;
+  color:var(--white);margin-bottom:.8rem;
+}
+.work-desc{font-size:.95rem;color:var(--muted);line-height:1.6;margin-bottom:1.5rem;}
+.work-link{
+  font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.2em;
+  color:var(--red2);text-decoration:none;text-transform:uppercase;
+  display:flex;align-items:center;gap:.5rem;transition:gap .2s;
+}
+.work-link:hover{gap:.9rem;}
+.work-link::after{content:'→';}
+
+/* ─── SKILLS ─── */
+#skills{padding-top:10vh;padding-bottom:10vh;}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:2rem;}
+.skill-group h4{
+  font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.15em;
+  color:var(--red2);margin-bottom:1.2rem;border-bottom:1px solid var(--border);padding-bottom:.6rem;
+}
+.skill-item{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;}
+.skill-name{font-size:.95rem;color:var(--text);letter-spacing:.04em;}
+.skill-bar{
+  width:80px;height:2px;background:rgba(255,255,255,.08);position:relative;
+}
+.skill-bar-fill{
+  height:100%;background:linear-gradient(90deg,var(--red),var(--red2));
+  transition:width 1.5s ease;
+}
+
+/* ─── DISCOGRAPHY ─── */
+#music{padding-top:10vh;padding-bottom:10vh;}
+.disco-list{display:flex;flex-direction:column;gap:1px;}
+.disco-item{
+  display:flex;align-items:center;gap:2rem;
+  padding:1.4rem 0;border-bottom:1px solid var(--border);
+  transition:background .2s;cursor:none;
+  position:relative;overflow:hidden;
+}
+.disco-item::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:0;
+  background:rgba(231,76,60,.04);transition:width .3s;
+}
+.disco-item:hover::before{width:100%;}
+.disco-num{
+  font-family:'Share Tech Mono',monospace;font-size:.75rem;
+  letter-spacing:.1em;color:var(--muted);min-width:2rem;
+}
+.disco-cover{
+  width:48px;height:48px;background:linear-gradient(135deg,var(--red) 0%,#1a0a0a 100%);
+  border:1px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+}
+.disco-info{flex:1;}
+.disco-title{
+  font-family:'Rajdhani',sans-serif;font-size:1.05rem;font-weight:600;
+  color:var(--white);letter-spacing:.04em;
+}
+.disco-meta{font-size:.85rem;color:var(--muted);font-family:'Share Tech Mono',monospace;letter-spacing:.1em;}
+.disco-type{
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.2em;
+  color:var(--muted);text-transform:uppercase;margin-left:auto;padding-right:1rem;
+}
+
+/* ─── PLATFORMS / SOCIAL ─── */
+#connect{padding-top:10vh;padding-bottom:10vh;}
+.platforms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:3rem;}
+.platform-link{
+  display:flex;flex-direction:column;align-items:center;gap:.7rem;
+  padding:1.5rem 1rem;border:1px solid var(--border);
+  text-decoration:none;color:var(--muted);
+  transition:border-color .25s,color .25s,transform .25s;
+  font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.15em;
+  text-transform:uppercase;text-align:center;cursor:none;
+}
+.platform-link .pl-icon{font-size:1.5rem;transition:transform .3s;}
+.platform-link:hover{border-color:var(--red2);color:var(--white);transform:translateY(-3px);}
+.platform-link:hover .pl-icon{transform:scale(1.2);}
+
+/* ─── CONTACT ─── */
+.contact-block{
+  display:grid;grid-template-columns:1fr 1fr;gap:5vw;align-items:start;
+  padding-top:2rem;
+}
+.contact-info h3{
+  font-family:'Bebas Neue',sans-serif;font-size:2.5rem;
+  letter-spacing:.1em;color:var(--white);margin-bottom:1.5rem;
+  line-height:1;
+}
+.contact-info p{color:var(--muted);font-size:1rem;line-height:1.7;margin-bottom:2rem;}
+.c-email{
+  display:flex;align-items:center;gap:1rem;padding:1rem 1.5rem;
+  border:1px solid var(--border);color:var(--text);text-decoration:none;
+  font-family:'Share Tech Mono',monospace;font-size:.8rem;letter-spacing:.15em;
+  transition:border-color .25s,color .25s;
+}
+.c-email:hover{border-color:var(--red2);color:var(--red2);}
+.contact-sites{margin-top:2rem;display:flex;flex-direction:column;gap:.8rem;}
+.c-site{
+  display:flex;align-items:center;gap:1rem;
+  font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.15em;
+  color:var(--muted);text-decoration:none;transition:color .25s;
+}
+.c-site:hover{color:var(--gold);}
+.c-site::before{content:'◆';color:var(--gold);font-size:.5rem;}
+
+/* ─── FOOTER ─── */
+footer{
+  border-top:1px solid var(--border);padding:3rem 5vw;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;
+  position:relative;z-index:10;
+}
+.foot-brand{
+  font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.2em;color:var(--white);
+}
+.foot-brand span{color:var(--red2);}
+.foot-copy{
+  font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.2em;
+  color:var(--muted);
+}
+
+/* ─── DIVIDER ─── */
+.divider{
+  height:1px;background:linear-gradient(90deg,transparent,var(--red2),transparent);
+  opacity:.25;margin:0 5vw;position:relative;z-index:10;
+}
+
+/* ─── REVEAL ANIM ─── */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .8s ease,transform .8s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+/* ─── MOBILE ─── */
+@media(max-width:768px){
+  .nav-links{display:none;}
+  .nav-menu-btn{display:flex;}
+  .about-grid{grid-template-columns:1fr;}
+  .about-visual{max-height:300px;aspect-ratio:16/9;}
+  .contact-block{grid-template-columns:1fr;}
+  .platforms-grid{grid-template-columns:repeat(3,1fr);}
+  .hero-name{font-size:clamp(3rem,15vw,6rem);}
+}
+
+/* ─── LOADING BAR ─── */
+#loader{
+  position:fixed;inset:0;background:var(--black);z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;
+}
+#loader.hide{opacity:0;visibility:hidden;transition:opacity .8s,visibility .8s;}
+.load-title{
+  font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.5em;
+  color:var(--muted);
+}
+.load-bar-wrap{width:200px;height:1px;background:rgba(255,255,255,.1);}
+.load-bar{height:100%;background:var(--red2);width:0%;transition:width .05s;}
+.load-pct{
+  font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.2em;
+  color:var(--red2);
+}
+</style>
 </head>
 <body>
 
+<!-- CUSTOM CURSOR -->
+<div id="cur"></div>
+<div id="cur2"></div>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="load-title">INITIALIZING</div>
+  <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+  <div class="load-pct" id="loadPct">0%</div>
+</div>
+
+<!-- 3D CANVAS -->
+<canvas id="canvas3d"></canvas>
+
+<!-- ENTER OVERLAY -->
 <div id="overlay">
+  <div class="ov-name">RAVIR SCOTT</div>
+  <div class="ov-role">Artist &nbsp;·&nbsp; Developer &nbsp;·&nbsp; Author</div>
+  <div class="ov-line"></div>
   <button id="enterBtn">ENTER EXPERIENCE</button>
 </div>
 
-<canvas id="webgl"></canvas>
+<!-- MAIN CONTENT -->
+<div id="content">
 
-<script src="libs/three.min.js"></script>
-<script src="libs/gsap.min.js"></script>
-<script src="main.js"></script>
+  <!-- NAV -->
+  <nav>
+    <a href="#hero" class="nav-brand">RAVIR<span>.</span>SCOTT</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#journey">Journey</a></li>
+      <li><a href="#works">Works</a></li>
+      <li><a href="#music">Music</a></li>
+      <li><a href="#connect">Connect</a></li>
+    </ul>
+    <button class="nav-menu-btn" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
 
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-tag">Ravir Scott — Est. Sonma, Begusarai</div>
+    <h1 class="hero-name">
+      RAVIR
+      <span class="accent">SCOTT</span>
+    </h1>
+    <p class="hero-desc">
+      Independent Artist & Developer who blends emotional rap, cinematic storytelling, 
+      and modern technology. Self-taught. Self-produced. Built on consistency.
+    </p>
+    <p class="hero-loc">📍 Sonma, Begusarai, Bihar, India &nbsp;|&nbsp; <span>ravirscott.in</span></p>
+    <div class="hero-cta">
+      <a href="#works" class="btn-primary">View Works</a>
+      <a href="#connect" class="btn-outline">Connect</a>
+    </div>
+    <div class="hero-scroll">
+      <div class="scroll-line"></div>
+      SCROLL
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="sec-header reveal">
+      <span class="sec-num">01</span>
+      <h2 class="sec-title">About</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="about-grid">
+      <div class="about-visual reveal">
+        <div class="about-img-placeholder">
+          <div class="pi-icon">RS</div>
+          <p>Ravir Scott<br>Artist & Developer</p>
+          <p style="font-size:.6rem;margin-top:.5rem;color:#333">
+            Photo: CC BY-SA 4.0
+          </p>
+        </div>
+        <div class="about-corner tl"></div>
+        <div class="about-corner tr"></div>
+        <div class="about-corner bl"></div>
+        <div class="about-corner br"></div>
+      </div>
+      <div class="about-text reveal">
+        <h3>Ravish Kumar<br>aka Ravir Scott</h3>
+        <p>
+          Born and raised in Sonma village, Begusarai, Bihar — Ravir Scott is an independent 
+          Artist, Developer, and Author who moves between emotional rap, hip-hop, cinematic 
+          storytelling, and modern technology.
+        </p>
+        <p>
+          Entirely self-taught and self-produced, he has built a body of work spanning music, 
+          writing, AI tools, web development, and cybersecurity awareness — all under his own name, 
+          on his own terms.
+        </p>
+        <p>
+          He operates with a singular focus: create meaningful music and build powerful 
+          technology tools that last.
+        </p>
+        <div class="about-tags">
+          <span class="tag">Music Artist</span>
+          <span class="tag">Web Developer</span>
+          <span class="tag">Author</span>
+          <span class="tag">AI Tools</span>
+          <span class="tag">Cybersecurity</span>
+          <span class="tag">Bansuri</span>
+          <span class="tag">Hip-Hop</span>
+          <span class="tag">Open Source</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- JOURNEY / TIMELINE -->
+  <section id="journey">
+    <div class="sec-header reveal">
+      <span class="sec-num">02</span>
+      <h2 class="sec-title">Journey</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-year">Chapter 01 — Early Life</div>
+        <div class="tl-title">The Seed</div>
+        <div class="tl-desc">Started creative writing and discovered a deep interest in music at a young age in Sonma village. The curiosity that would define everything began here.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-year">Chapter 02 — Learning Phase</div>
+        <div class="tl-title">Self-Teaching</div>
+        <div class="tl-desc">Began self-learning coding, technology, and AI tools. No formal institution — pure curiosity, late nights, and relentless building.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-year">Chapter 03 — Music Journey</div>
+        <div class="tl-title">Independent Artist</div>
+        <div class="tl-desc">Entered independent music creation and distribution. Released emotional rap and cinematic compositions, including <em>Lone Yet Loyal</em>. Self-produced from start to finish.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-year">Chapter 04 — Developer Path</div>
+        <div class="tl-title">Builder</div>
+        <div class="tl-desc">Built technical projects across web, cybersecurity awareness, and AI. Published tech content on Dev.to, Hashnode, and Medium under the Ravir Scott name.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-year">Chapter 05 — Present</div>
+        <div class="tl-title">Active & Expanding</div>
+        <div class="tl-desc">Actively creating as Artist & Developer. Working on new music, open-source tools, digital archives, and growing a community across platforms.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-year">Chapter 06 — Future</div>
+        <div class="tl-title">The Vision</div>
+        <div class="tl-desc">To create music that moves people and technology tools that empower them. Autonomous, consistent, meaningful — that is the goal.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- WORKS -->
+  <section id="works">
+    <div class="sec-header reveal">
+      <span class="sec-num">03</span>
+      <h2 class="sec-title">Works</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="works-grid">
+      <div class="work-card reveal">
+        <div class="work-type">Music Production</div>
+        <div class="work-title">Lone Yet Loyal</div>
+        <div class="work-desc">Debut independent release — emotional rap with cinematic arrangements. Available on all major streaming platforms including Spotify and Apple Music.</div>
+        <a href="https://ravirscott.in" target="_blank" class="work-link">Stream Now</a>
+      </div>
+      <div class="work-card reveal">
+        <div class="work-type">Web Development</div>
+        <div class="work-title">3D Portfolio</div>
+        <div class="work-desc">This site — built with Three.js, WebGL, and GSAP. Real-time particle systems, custom shaders, and cinematic scroll animations.</div>
+        <a href="https://github.com/ravirscott" target="_blank" class="work-link">View GitHub</a>
+      </div>
+      <div class="work-card reveal">
+        <div class="work-type">Digital Archive</div>
+        <div class="work-title">Sonma Village</div>
+        <div class="work-desc">A digital preservation project archiving the streets, temples, ponds, and cultural heritage of Sonma, Begusarai — built entirely in HTML.</div>
+        <a href="https://ravirscott.in" target="_blank" class="work-link">Explore</a>
+      </div>
+      <div class="work-card reveal">
+        <div class="work-type">Tool / App</div>
+        <div class="work-title">WiFi Radar Scanner</div>
+        <div class="work-desc">Wireless signal detection and visualization — Python backend with HTML/JS radar UI. Detects WiFi & Bluetooth signals in real-time.</div>
+        <a href="https://github.com/ravirscott" target="_blank" class="work-link">View Code</a>
+      </div>
+      <div class="work-card reveal">
+        <div class="work-type">Game / Creative</div>
+        <div class="work-title">RAVIR Typing Game</div>
+        <div class="work-desc">ZType-inspired space shooter typing game — single HTML file, custom difficulty scaling, high-score tracking. Dark hacker aesthetic.</div>
+        <a href="https://github.com/ravirscott" target="_blank" class="work-link">Play Now</a>
+      </div>
+      <div class="work-card reveal">
+        <div class="work-type">Writing / Content</div>
+        <div class="work-title">Tech Articles</div>
+        <div class="work-desc">Published articles on cybersecurity, OSINT, AI tools, and web development across Dev.to, Hashnode, and Medium.</div>
+        <a href="https://medium.com" target="_blank" class="work-link">Read Articles</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <div class="sec-header reveal">
+      <span class="sec-num">04</span>
+      <h2 class="sec-title">Skills</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="skills-grid reveal">
+      <div class="skill-group">
+        <h4>Development</h4>
+        <div class="skill-item"><span class="skill-name">HTML / CSS / JS</span><div class="skill-bar"><div class="skill-bar-fill" style="width:90%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">Three.js / WebGL</span><div class="skill-bar"><div class="skill-bar-fill" style="width:75%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">Python</span><div class="skill-bar"><div class="skill-bar-fill" style="width:80%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">GitHub / Git</span><div class="skill-bar"><div class="skill-bar-fill" style="width:85%"></div></div></div>
+      </div>
+      <div class="skill-group">
+        <h4>Music</h4>
+        <div class="skill-item"><span class="skill-name">Songwriting</span><div class="skill-bar"><div class="skill-bar-fill" style="width:92%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">Bansuri Flute</span><div class="skill-bar"><div class="skill-bar-fill" style="width:78%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">Music Production</span><div class="skill-bar"><div class="skill-bar-fill" style="width:70%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">Rap / Hip-Hop</span><div class="skill-bar"><div class="skill-bar-fill" style="width:88%"></div></div></div>
+      </div>
+      <div class="skill-group">
+        <h4>Research & Security</h4>
+        <div class="skill-item"><span class="skill-name">OSINT</span><div class="skill-bar"><div class="skill-bar-fill" style="width:72%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">Cybersecurity</span><div class="skill-bar"><div class="skill-bar-fill" style="width:68%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">AI Tools</span><div class="skill-bar"><div class="skill-bar-fill" style="width:85%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">Technical Writing</span><div class="skill-bar"><div class="skill-bar-fill" style="width:80%"></div></div></div>
+      </div>
+      <div class="skill-group">
+        <h4>Design & Tools</h4>
+        <div class="skill-item"><span class="skill-name">UI / Dark Aesthetic</span><div class="skill-bar"><div class="skill-bar-fill" style="width:88%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">Blogger / CMS</span><div class="skill-bar"><div class="skill-bar-fill" style="width:82%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">CMD / PowerShell</span><div class="skill-bar"><div class="skill-bar-fill" style="width:75%"></div></div></div>
+        <div class="skill-item"><span class="skill-name">WSL / Linux</span><div class="skill-bar"><div class="skill-bar-fill" style="width:70%"></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- DISCOGRAPHY -->
+  <section id="music">
+    <div class="sec-header reveal">
+      <span class="sec-num">05</span>
+      <h2 class="sec-title">Discography</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="disco-list reveal">
+      <div class="disco-item">
+        <div class="disco-num">01</div>
+        <div class="disco-cover">🎵</div>
+        <div class="disco-info">
+          <div class="disco-title">Lone Yet Loyal</div>
+          <div class="disco-meta">RAVIR SCOTT &nbsp;·&nbsp; RAP / HIP-HOP</div>
+        </div>
+        <div class="disco-type">Album</div>
+      </div>
+      <div class="disco-item">
+        <div class="disco-num">02</div>
+        <div class="disco-cover">🎼</div>
+        <div class="disco-info">
+          <div class="disco-title">Chup Se Mohabbat</div>
+          <div class="disco-meta">RAVIR SCOTT &nbsp;·&nbsp; HINDI ROMANTIC / BANSURI</div>
+        </div>
+        <div class="disco-type">Single</div>
+      </div>
+      <div class="disco-item">
+        <div class="disco-num">03</div>
+        <div class="disco-cover">🎤</div>
+        <div class="disco-info">
+          <div class="disco-title">Independent Singles</div>
+          <div class="disco-meta">RAVIR SCOTT &nbsp;·&nbsp; VARIOUS</div>
+        </div>
+        <div class="disco-type">Singles</div>
+      </div>
+      <div class="disco-item">
+        <div class="disco-num">04</div>
+        <div class="disco-cover">🎬</div>
+        <div class="disco-info">
+          <div class="disco-title">Cinematic Collaborations</div>
+          <div class="disco-meta">RAVIR SCOTT &nbsp;·&nbsp; STORYTELLING</div>
+        </div>
+        <div class="disco-type">Collab</div>
+      </div>
+      <div class="disco-item">
+        <div class="disco-num">05</div>
+        <div class="disco-cover">⏳</div>
+        <div class="disco-info">
+          <div class="disco-title">Upcoming Projects</div>
+          <div class="disco-meta">RAVIR SCOTT &nbsp;·&nbsp; RAP + CINEMATIC</div>
+        </div>
+        <div class="disco-type">Coming Soon</div>
+      </div>
+    </div>
+    <div style="margin-top:2.5rem;display:flex;gap:1rem;flex-wrap:wrap;" class="reveal">
+      <a href="https://open.spotify.com" target="_blank" class="btn-outline">Spotify</a>
+      <a href="https://music.apple.com" target="_blank" class="btn-outline">Apple Music</a>
+      <a href="https://music.amazon.com" target="_blank" class="btn-outline">Amazon Music</a>
+      <a href="https://www.jiosaavn.com" target="_blank" class="btn-outline">JioSaavn</a>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- CONNECT -->
+  <section id="connect">
+    <div class="sec-header reveal">
+      <span class="sec-num">06</span>
+      <h2 class="sec-title">Connect</h2>
+      <div class="sec-line"></div>
+    </div>
+
+    <div class="platforms-grid reveal">
+      <a href="https://youtube.com" target="_blank" class="platform-link"><div class="pl-icon">▶</div>YouTube</a>
+      <a href="https://instagram.com" target="_blank" class="platform-link"><div class="pl-icon">◈</div>Instagram</a>
+      <a href="https://github.com/ravirscott" target="_blank" class="platform-link"><div class="pl-icon">⌥</div>GitHub</a>
+      <a href="https://twitter.com" target="_blank" class="platform-link"><div class="pl-icon">✕</div>X / Twitter</a>
+      <a href="https://linkedin.com" target="_blank" class="platform-link"><div class="pl-icon">in</div>LinkedIn</a>
+      <a href="https://facebook.com" target="_blank" class="platform-link"><div class="pl-icon">f</div>Facebook</a>
+      <a href="https://medium.com" target="_blank" class="platform-link"><div class="pl-icon">M</div>Medium</a>
+      <a href="https://dev.to" target="_blank" class="platform-link"><div class="pl-icon">{ }</div>Dev.to</a>
+      <a href="https://hashnode.com" target="_blank" class="platform-link"><div class="pl-icon">#</div>Hashnode</a>
+      <a href="https://linktr.ee" target="_blank" class="platform-link"><div class="pl-icon">⛓</div>Linktree</a>
+      <a href="https://open.spotify.com" target="_blank" class="platform-link"><div class="pl-icon">♪</div>Spotify</a>
+      <a href="https://ravirscott.in" target="_blank" class="platform-link"><div class="pl-icon">◉</div>Website</a>
+    </div>
+
+    <div class="contact-block">
+      <div class="contact-info reveal">
+        <h3>GET IN<br>TOUCH</h3>
+        <p>Open for music collaborations, development projects, and creative opportunities.</p>
+        <a href="mailto:ravishxff@gmail.com" class="c-email">✉ ravishxff@gmail.com</a>
+        <div class="contact-sites">
+          <a href="https://ravirscott.in" target="_blank" class="c-site">ravirscott.in</a>
+          <a href="https://ravir.fun" target="_blank" class="c-site">ravir.fun</a>
+        </div>
+      </div>
+      <div class="reveal" style="padding-top:1rem;">
+        <div style="border:1px solid var(--border);padding:2.5rem;background:var(--card);">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.1em;color:var(--white);margin-bottom:1.5rem;">QUICK INFO</div>
+          <div style="display:flex;flex-direction:column;gap:.8rem;">
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:.8rem;">
+              <span style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.15em;color:var(--muted);">NAME</span>
+              <span style="font-family:'Rajdhani',sans-serif;font-size:.95rem;color:var(--white);">Ravir Scott</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:.8rem;">
+              <span style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.15em;color:var(--muted);">BIRTH NAME</span>
+              <span style="font-family:'Rajdhani',sans-serif;font-size:.95rem;color:var(--white);">Ravish Kumar</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:.8rem;">
+              <span style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.15em;color:var(--muted);">ORIGIN</span>
+              <span style="font-family:'Rajdhani',sans-serif;font-size:.95rem;color:var(--white);">Sonma, Begusarai, Bihar</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:.8rem;">
+              <span style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.15em;color:var(--muted);">ROLES</span>
+              <span style="font-family:'Rajdhani',sans-serif;font-size:.95rem;color:var(--white);">Artist · Developer · Author</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.15em;color:var(--muted);">STATUS</span>
+              <span style="font-family:'Share Tech Mono',monospace;font-size:.75rem;color:#2ecc71;">● ACTIVE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="foot-brand">RAVIR<span>.</span>SCOTT</div>
+    <div class="foot-copy">© 2025 Ravir Scott. CC BY-SA 4.0 where noted.</div>
+  </footer>
+
+</div><!-- end #content -->
+
+<script>
+// ─── CURSOR ───
+const cur = document.getElementById('cur');
+const cur2 = document.getElementById('cur2');
+let mx=0,my=0,cx=0,cy=0;
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px'; });
+setInterval(()=>{cx+=(mx-cx)*.15;cy+=(my-cy)*.15;cur2.style.left=cx+'px';cur2.style.top=cy+'px';},16);
+
+// ─── LOADER ───
+const loader = document.getElementById('loader');
+const loadBar = document.getElementById('loadBar');
+const loadPct = document.getElementById('loadPct');
+let pct = 0;
+const loadInt = setInterval(()=>{
+  pct += Math.random()*12;
+  if(pct>=100){ pct=100; clearInterval(loadInt); setTimeout(()=>{loader.classList.add('hide');},400); }
+  loadBar.style.width = pct+'%';
+  loadPct.textContent = Math.floor(pct)+'%';
+},120);
+
+// ─── THREE.JS 3D BACKGROUND ───
+(function(){
+  const canvas = document.getElementById('canvas3d');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x03030a, 1);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.z = 5;
+
+  // ─ PARTICLE FIELD ─
+  const pCount = 6000;
+  const pGeo = new THREE.BufferGeometry();
+  const positions = new Float32Array(pCount*3);
+  const colors = new Float32Array(pCount*3);
+  const sizes = new Float32Array(pCount);
+
+  for(let i=0;i<pCount;i++){
+    positions[i*3]   = (Math.random()-0.5)*30;
+    positions[i*3+1] = (Math.random()-0.5)*30;
+    positions[i*3+2] = (Math.random()-0.5)*20;
+    const t = Math.random();
+    if(t > 0.97){
+      colors[i*3]=0.87; colors[i*3+1]=0.12; colors[i*3+2]=0.12; // red accent
+    } else if(t > 0.92){
+      colors[i*3]=0.83; colors[i*3+1]=0.63; colors[i*3+2]=0.09; // gold
+    } else {
+      const b = 0.1 + Math.random()*0.25;
+      colors[i*3]=b; colors[i*3+1]=b; colors[i*3+2]=b+0.05;     // dim white-blue
+    }
+    sizes[i] = Math.random()*2.5 + 0.5;
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+  pGeo.setAttribute('color',    new THREE.BufferAttribute(colors,3));
+  pGeo.setAttribute('size',     new THREE.BufferAttribute(sizes,1));
+
+  const pMat = new THREE.PointsMaterial({
+    size:0.04, vertexColors:true, transparent:true,
+    opacity:0.8, sizeAttenuation:true
+  });
+  const particles = new THREE.Points(pGeo, pMat);
+  scene.add(particles);
+
+  // ─ GRID PLANE ─
+  const gridHelper = new THREE.GridHelper(40, 40, 0x1a0808, 0x0d0d18);
+  gridHelper.position.y = -6;
+  gridHelper.rotation.x = 0.2;
+  scene.add(gridHelper);
+
+  // ─ FLOATING GEOMETRIC SHAPES ─
+  const shapes = [];
+  const shapeGeos = [
+    new THREE.OctahedronGeometry(0.5, 0),
+    new THREE.TetrahedronGeometry(0.6, 0),
+    new THREE.IcosahedronGeometry(0.45, 0),
+  ];
+  const wireMat = new THREE.MeshBasicMaterial({color:0xc0392b, wireframe:true, transparent:true, opacity:0.35});
+  const wireMat2 = new THREE.MeshBasicMaterial({color:0xd4a017, wireframe:true, transparent:true, opacity:0.25});
+
+  for(let i=0;i<8;i++){
+    const geo = shapeGeos[i%3];
+    const mat = i%3===0 ? wireMat : wireMat2;
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(
+      (Math.random()-0.5)*14,
+      (Math.random()-0.5)*8,
+      (Math.random()-0.5)*6 - 4
+    );
+    mesh.userData = {
+      rx: (Math.random()-.5)*0.01,
+      ry: (Math.random()-.5)*0.012,
+      floatSpeed: Math.random()*0.003 + 0.001,
+      floatOffset: Math.random()*Math.PI*2,
+    };
+    scene.add(mesh);
+    shapes.push(mesh);
+  }
+
+  // ─ MOUSE PARALLAX ─
+  let targetX=0, targetY=0, mouseX=0, mouseY=0;
+  document.addEventListener('mousemove', e=>{
+    mouseX = (e.clientX/window.innerWidth - 0.5)*2;
+    mouseY = (e.clientY/window.innerHeight - 0.5)*2;
+  });
+
+  // ─ SCROLL ─
+  let scrollY = 0;
+  window.addEventListener('scroll', ()=>{ scrollY = window.scrollY; });
+
+  // ─ RESIZE ─
+  window.addEventListener('resize',()=>{
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // ─ ANIMATE ─
+  let t=0;
+  function animate(){
+    requestAnimationFrame(animate);
+    t += 0.005;
+
+    // parallax
+    targetX += (mouseX*0.5 - targetX)*0.04;
+    targetY += (-mouseY*0.3 - targetY)*0.04;
+    camera.position.x = targetX;
+    camera.position.y = targetY + scrollY*-0.0008;
+    camera.rotation.z = targetX * 0.015;
+
+    // particles drift
+    particles.rotation.y = t * 0.04;
+    particles.rotation.x = t * 0.015;
+
+    // shapes
+    shapes.forEach(s=>{
+      s.rotation.x += s.userData.rx;
+      s.rotation.y += s.userData.ry;
+      s.position.y += Math.sin(t + s.userData.floatOffset)*s.userData.floatSpeed;
+    });
+
+    // grid pulse
+    gridHelper.position.y = -6 + Math.sin(t*0.5)*0.3;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+// ─── ENTER BUTTON ───
+document.getElementById('enterBtn').addEventListener('click', ()=>{
+  document.getElementById('overlay').classList.add('hide');
+  setTimeout(()=>{
+    document.getElementById('content').classList.add('show');
+  }, 600);
+});
+
+// ─── INTERSECTION OBSERVER (scroll reveals) ───
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+    }
+  });
+},{threshold:0.12});
+
+document.querySelectorAll('.reveal, .tl-item').forEach(el=>observer.observe(el));
+
+// ─── MOBILE MENU ───
+function toggleMobileMenu(){
+  const links = document.querySelector('.nav-links');
+  if(links.style.display==='flex'){
+    links.style.display='none';
+  } else {
+    links.style.display='flex';
+    links.style.flexDirection='column';
+    links.style.position='fixed';
+    links.style.top='0';links.style.left='0';links.style.right='0';links.style.bottom='0';
+    links.style.background='rgba(3,3,10,.97)';
+    links.style.justifyContent='center';links.style.alignItems='center';links.style.gap='2.5rem';
+    links.style.zIndex='60';
+  }
+}
+document.querySelectorAll('.nav-links a').forEach(a=>a.addEventListener('click',()=>{
+  document.querySelector('.nav-links').style.display='';
+}));
+</script>
 </body>
 </html>
+
 
