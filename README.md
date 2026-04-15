@@ -6,13 +6,13 @@ A modern 3D interactive portfolio showcasing creative visuals, smooth animations
 
 ## 🚀 Live Demo
 
-👉 https://ravirscott.github.io/ravirscott-3d-portfolio/
+👉 https://ravirscott.github.io/ravirscott-portfolio/
 
 ---
 
 ## 📂 GitHub Repository
 
-👉 https://github.com/ravirscott/ravirscott-3d-portfolio
+👉 https://github.com/ravirscott/ravirscott-portfolio
 
 ---
 
@@ -37,12 +37,12 @@ A modern 3D interactive portfolio showcasing creative visuals, smooth animations
 
 ## 📸 Preview
 
-![Preview](https://raw.githubusercontent.com/ravirscott/ravirscott-3d-portfolio/main/preview.png)
+![Preview](https://raw.githubusercontent.com/ravirscott/ravirscott-portfolio/main/preview.png)
 
 ---
 
 ## ⚙️ How to Run Locally
 
 ```bash
-git clone https://github.com/ravirscott/ravirscott-3d-portfolio
+git clone https://github.com/ravirscott/ravirscott-portfolio
 cd ravirscott-3d-portfolio
